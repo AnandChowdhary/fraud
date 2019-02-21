@@ -17,4 +17,10 @@ files.create("user", <Data>{
   email: "jane@example.com",
   phone: "+31XXXXXXXXX"
 });
-console.log("Created new file");
+console.log("Created new file (user.json)");
+
+// Reading a file
+console.log("Name: " + files.read("user").name);
+
+// Listing all files
+console.log("List of files", files.list());
