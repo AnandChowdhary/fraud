@@ -10,11 +10,6 @@ test("creates a file", () => {
   expect(database.existsSync("sample")).toBeTruthy();
 });
 
-test("doesn't create a pre-existing file", () => {
-  database.createSync("sample", { hello: "not-world" }, false);
-  expect(database.readSync("sample").hello).toBe("world");
-});
-
 test("reads a file", () => {
   expect(database.readSync("sample").hello).toBe("world");
 });
@@ -48,7 +43,7 @@ test("updates a file recursively", () => {
   expect(database.readSync("yet-another-sample").hello.world).toBeFalsy();
 });
 
-test("update returns false on error", () => {
+test("read returns false on error", () => {
   expect(database.readSync("unknown-file")).toBeFalsy();
 });
 

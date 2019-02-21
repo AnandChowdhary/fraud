@@ -80,38 +80,16 @@ export default class Fraud implements Frauderface {
         fileName.substring(0, fileName.length - 1 - this.extension.length)
       );
   }
-  create(fileName: string, contents: any, overwrite: boolean = true) {
-    if (!overwrite) {
-      return new Promise((resolve, reject) => {
-        this.exists(this.getPath(fileName)).then(check => {
-          if (check) return reject("file_exists");
-          fs.writeFile(
-            this.getPath(fileName),
-            JSON.stringify(contents),
-            error => {
-              if (error) return reject(error);
-              this.callUpdate(fileName);
-              resolve();
-            }
-          );
-        });
+  create(fileName: string, contents: any) {
+    return new Promise((resolve, reject) => {
+      fs.writeFile(this.getPath(fileName), JSON.stringify(contents), error => {
+        if (error) return reject(error);
+        this.callUpdate(fileName);
+        resolve();
       });
-    } else {
-      return new Promise((resolve, reject) => {
-        fs.writeFile(
-          this.getPath(fileName),
-          JSON.stringify(contents),
-          error => {
-            if (error) return reject(error);
-            this.callUpdate(fileName);
-            resolve();
-          }
-        );
-      });
-    }
+    });
   }
-  createSync(fileName: string, contents: any, overwrite: boolean = true) {
-    if (!overwrite && this.exists(fileName)) return;
+  createSync(fileName: string, contents: any) {
     fs.writeFileSync(this.getPath(fileName), JSON.stringify(contents));
     this.callUpdate(fileName);
   }
