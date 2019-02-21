@@ -1,7 +1,7 @@
 {
   "name": "fraud",
-  "version": "1.0.0",
-  "main": "index.ts",
+  "version": "2.0.0",
+  "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "https://github.com/AnandChowdhary/fraud",
