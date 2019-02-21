@@ -4,5 +4,19 @@
   "main": "index.ts",
   "repository": "https://github.com/AnandChowdhary/fraud",
   "author": "Anand Chowdhary <mail@anandchowdhary.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "prettier": "onchange '*.ts' -- prettier --write {{changed}}",
+    "start": "onchange '*.ts' -- yarn build",
+    "demo": "yarn build && nodemon dist/demo.js"
+  },
+  "devDependencies": {
+    "@types/node": "^11.9.4",
+    "nodemon": "^1.18.10",
+    "onchange": "^5.2.0",
+    "prettier": "^1.16.4",
+    "tsc": "^1.20150623.0",
+    "typescript": "^3.3.3"
+  }
 }
