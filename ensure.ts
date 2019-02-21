@@ -6,7 +6,7 @@ import * as path from "path";
  * @param filePath - Given path for folder
  */
 const ensure = (filePath: string) => {
-  var dirname = path.dirname(filePath);
+  const dirname: string = path.dirname(filePath);
   if (fs.existsSync(dirname)) {
     return true;
   }
