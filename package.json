@@ -2,16 +2,18 @@
   "name": "fraud",
   "version": "0.5.0",
   "main": "index.ts",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "repository": "https://github.com/AnandChowdhary/fraud",
   "author": "Anand Chowdhary <mail@anandchowdhary.com>",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "prettier": "onchange '*.ts' -- prettier --write {{changed}}",
+    "prettier": "onchange '**/*.ts' -- prettier --write {{changed}}",
     "start": "onchange '*.ts' -- yarn build",
     "demo": "yarn build && nodemon --watch dist dist/demo.js",
     "test": "jest --coverage --coverageReporters=text-lcov | coveralls",
-    "test-without-coverage": "jest"
+    "test-without-sending": "jest --coverage"
   },
   "devDependencies": {
     "@types/jest": "^24.0.6",

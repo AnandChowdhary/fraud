@@ -14,7 +14,7 @@ const files = new Fraud({
 console.log("Initialized folder", directory);
 
 // Create a new files
-files.create("user", <Data>{
+files.createSync("user", <Data>{
   name: "Jane Doe",
   email: "jane@example.com",
   phone: {
@@ -25,15 +25,15 @@ files.create("user", <Data>{
 console.log("Created new file (user.json)");
 
 // Reading a file
-console.log("Name: " + files.read("user").name);
+console.log("Name: " + files.readSync("user").name);
 
 // Listing all files
-console.log("List of files", files.list());
+console.log("List of files", files.listSync());
 
 // Updating country code of Jane
 console.log(
   "Updated country code",
-  files.update("user", {
+  files.updateSync("user", {
     phone: {
       code: "+1"
     }
@@ -41,4 +41,4 @@ console.log(
 );
 
 // Deleting this file
-console.log("Deleting file", files.delete("user"));
+console.log("Deleting file", files.deleteSync("user"));

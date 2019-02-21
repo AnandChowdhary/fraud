@@ -14,6 +14,18 @@ interface Constructor {
   update?: Function;
 }
 
+const updateValues = (f1: object, f2: object) => {
+  Object.keys(f2).forEach(key => {
+    if (f2.hasOwnProperty(key)) {
+      if (f1[key] && typeof f1[key] === "object" && !Array.isArray(f2[key])) {
+        updateValues(f1[key], f2[key]);
+      } else {
+        f1[key] = f2[key];
+      }
+    }
+  });
+};
+
 export default class Fraud implements Frauderface {
   root: string;
   extension: string;
@@ -32,9 +44,28 @@ export default class Fraud implements Frauderface {
     return path.join(this.root, `${fileName}.${this.extension}`);
   }
   exists(fileName: string) {
+    return new Promise(resolve => {
+      fs.exists(this.getPath(fileName), (exists: boolean) => resolve(exists));
+    });
+  }
+  existsSync(fileName: string) {
     return fs.existsSync(this.getPath(fileName));
   }
   list() {
+    return new Promise((resolve, reject) => {
+      fs.readdir(this.root, (error, files) => {
+        if (error) return reject(error);
+        resolve(
+          files
+            .filter((fileName: string) => fileName.endsWith(this.extension))
+            .map((fileName: string) =>
+              fileName.substring(0, fileName.length - 1 - this.extension.length)
+            )
+        );
+      });
+    });
+  }
+  listSync() {
     return fs
       .readdirSync(this.root)
       .filter((fileName: string) => fileName.endsWith(this.extension))
@@ -43,11 +74,53 @@ export default class Fraud implements Frauderface {
       );
   }
   create(fileName: string, contents: any, overwrite: boolean = true) {
+    if (!overwrite) {
+      return new Promise((resolve, reject) => {
+        this.exists(this.getPath(fileName)).then(check => {
+          if (check) return reject("file_exists");
+          fs.writeFile(
+            this.getPath(fileName),
+            JSON.stringify(contents),
+            error => {
+              if (error) return reject(error);
+              this.callUpdate(fileName);
+              resolve();
+            }
+          );
+        });
+      });
+    } else {
+      return new Promise((resolve, reject) => {
+        fs.writeFile(
+          this.getPath(fileName),
+          JSON.stringify(contents),
+          error => {
+            if (error) return reject(error);
+            this.callUpdate(fileName);
+            resolve();
+          }
+        );
+      });
+    }
+  }
+  createSync(fileName: string, contents: any, overwrite: boolean = true) {
     if (!overwrite && this.exists(fileName)) return;
     fs.writeFileSync(this.getPath(fileName), JSON.stringify(contents));
     this.callUpdate(fileName);
   }
   read(fileName: string) {
+    return new Promise((resolve, reject) => {
+      fs.readFile(this.getPath(fileName), (error, file) => {
+        if (error) return reject(error);
+        try {
+          resolve(JSON.parse(file.toString()));
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+  }
+  readSync(fileName: string) {
     try {
       return JSON.parse(fs.readFileSync(this.getPath(fileName)).toString());
     } catch (e) {
@@ -55,31 +128,34 @@ export default class Fraud implements Frauderface {
     }
   }
   delete(fileName: string) {
+    return new Promise((resolve, reject) => {
+      fs.unlink(this.getPath(fileName), error => {
+        if (error) return reject(error);
+        this.callUpdate(fileName);
+        resolve();
+      });
+    });
+  }
+  deleteSync(fileName: string) {
     fs.unlinkSync(this.getPath(fileName));
     this.callUpdate(fileName);
   }
   update(fileName: string, updateObject: any) {
-    const updateValues = (f1: object, f2: object) => {
-      Object.keys(f2).forEach(key => {
-        if (f2.hasOwnProperty(key)) {
-          // Check if f1[key] is an object
-          if (
-            f1[key] &&
-            typeof f1[key] === "object" &&
-            !Array.isArray(f2[key])
-          ) {
-            // If it is, recursively update it
-            updateValues(f1[key], f2[key]);
-          } else {
-            // Otherwise it can be updated
-            f1[key] = f2[key];
-          }
-        }
-      });
-    };
-    const file = this.read(fileName);
+    return new Promise((resolve, reject) => {
+      this.read(fileName)
+        .then(file => {
+          updateValues(file, updateObject);
+          this.create(fileName, file)
+            .then(() => resolve())
+            .catch(error => reject(error));
+        })
+        .catch(error => reject(error));
+    });
+  }
+  updateSync(fileName: string, updateObject: any) {
+    const file = this.readSync(fileName);
     updateValues(file, updateObject);
-    this.create(fileName, file);
+    this.createSync(fileName, file);
     this.callUpdate();
     return file;
   }

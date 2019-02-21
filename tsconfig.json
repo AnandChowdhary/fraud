@@ -4,7 +4,8 @@
     "module": "commonjs",
     "outDir": "dist",
     "typeRoots": ["node_modules/@types/"],
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "declaration": true
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 }
