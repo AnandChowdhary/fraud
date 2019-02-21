@@ -9,7 +9,7 @@
     "build": "tsc",
     "prettier": "onchange '*.ts' -- prettier --write {{changed}}",
     "start": "onchange '*.ts' -- yarn build",
-    "demo": "yarn build && nodemon dist/demo.js"
+    "demo": "yarn build && nodemon --watch dist dist/demo.js"
   },
   "devDependencies": {
     "@types/node": "^11.9.4",

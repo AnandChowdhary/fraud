@@ -130,3 +130,6 @@ typings/
 
 # Generated files
 dist/
+
+# Sample database files
+database/*.json
