@@ -1,0 +1,8 @@
+{
+  "name": "fraud",
+  "version": "0.0.0",
+  "main": "index.ts",
+  "repository": "https://github.com/AnandChowdhary/fraud",
+  "author": "Anand Chowdhary <mail@anandchowdhary.com>",
+  "license": "MIT"
+}
