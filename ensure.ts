@@ -10,7 +10,9 @@ const ensure = (filePath: string) => {
   if (fs.existsSync(dirname)) {
     return true;
   }
+  /* istanbul ignore next */
   ensure(dirname);
+  /* istanbul ignore next */
   fs.mkdirSync(dirname);
 };
 

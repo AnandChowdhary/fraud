@@ -26,7 +26,7 @@ export default class Fraud implements Frauderface {
   }
   callUpdate(fileName?: string) {
     if (typeof this.updateFunction === "function")
-      this.updateFunction(fileName);
+      return this.updateFunction(fileName);
   }
   getPath(fileName: string) {
     return path.join(this.root, `${fileName}.${this.extension}`);
@@ -42,7 +42,7 @@ export default class Fraud implements Frauderface {
         fileName.substring(0, fileName.length - 1 - this.extension.length)
       );
   }
-  create(fileName: string, contents: object, overwrite: boolean = true) {
+  create(fileName: string, contents: any, overwrite: boolean = true) {
     if (!overwrite && this.exists(fileName)) return;
     fs.writeFileSync(this.getPath(fileName), JSON.stringify(contents));
     this.callUpdate(fileName);
@@ -58,7 +58,7 @@ export default class Fraud implements Frauderface {
     fs.unlinkSync(this.getPath(fileName));
     this.callUpdate(fileName);
   }
-  update(fileName: string, updateObject: object) {
+  update(fileName: string, updateObject: any) {
     const updateValues = (f1: object, f2: object) => {
       Object.keys(f2).forEach(key => {
         if (f2.hasOwnProperty(key)) {
