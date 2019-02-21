@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import ensure from "./ensure";
+import * as mkdirp from "mkdirp";
 
 interface Frauderface {
   root: string;
@@ -34,7 +34,14 @@ export default class Fraud implements Frauderface {
     this.root = directory;
     this.extension = extension || "json";
     this.updateFunction = update;
-    ensure(this.root);
+  }
+  init() {
+    return new Promise((resolve, reject) => {
+      mkdirp(path.join(__dirname, this.root), error => {
+        if (error) return reject(error);
+        resolve();
+      });
+    });
   }
   callUpdate(fileName?: string) {
     if (typeof this.updateFunction === "function")

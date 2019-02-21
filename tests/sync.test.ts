@@ -1,5 +1,4 @@
 import Fraud from "../index";
-import ensure from "../ensure";
 
 const database = new Fraud({
   directory: "./database",
@@ -55,8 +54,4 @@ test("update returns false on error", () => {
 
 test("calls update function", () => {
   expect(database.callUpdate()).toBeTruthy();
-});
-
-test("ensures existance", () => {
-  expect(ensure("unknown-folder")).toBeTruthy();
 });

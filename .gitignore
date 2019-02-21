@@ -133,3 +133,4 @@ dist/
 
 # Sample database files
 database/*.json
+test-*/

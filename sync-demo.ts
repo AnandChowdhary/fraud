@@ -6,7 +6,7 @@ interface Data {
   phone: any;
 }
 
-const directory: string = "./database";
+const directory: string = "./database-2";
 
 const files = new Fraud({
   directory
