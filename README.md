@@ -7,7 +7,7 @@
 [![GitHub](https://img.shields.io/github/license/anandchowdhary/fraud.svg)](https://github.com/AnandChowdhary/fraud/blob/master/LICENSE)
 ![Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/AnandChowdhary/fraud.svg)
 
-Fraud is a library for Node.js for a file-system based data storage solution for times when MongoDB is an overkill. It's essentially a wrapper around the native `fs` filesystem functions, with added utilities.
+Fraud is a promise-based library for Node.js for a file-system based data storage solution for times when MongoDB is an overkill. It's essentially a wrapper around the native `fs` filesystem functions, with added utilities.
 
 ## ⭐ How it works
 
@@ -65,6 +65,8 @@ You can use the following methods for programatical access:
 | `list()` | Lists all available files |
 | `exists(fileName)` | Returns whether file exists |
 
+There are also `sync` versions of each function above (e.g., `createSync()`).
+
 For example, you can create a new file like this:
 
 ```js
@@ -91,7 +93,7 @@ database.update("ara", {
 Which can be read like this:
 
 ```js
-console.log(database.read("ara).phone);
+database.read("ara").then(user => console.log(user.phone));
 // { countryCode: 1, number: "XXXXXXXXX" }
 ```
 
