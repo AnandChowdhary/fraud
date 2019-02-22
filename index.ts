@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as mkdirp from "mkdirp";
+import * as promiseSerial from "promise-serial";
 
 interface Frauderface {
   root: string;
@@ -79,6 +80,30 @@ export default class Fraud implements Frauderface {
       .map((fileName: string) =>
         fileName.substring(0, fileName.length - 1 - this.extension.length)
       );
+  }
+  readAll() {
+    return new Promise((resolve, reject) => {
+      this.list()
+        .then((files: string[]) => {
+          const promises = files.map((file: string) => () =>
+            new Promise((resolve, reject) => {
+              this.read(file)
+                .then(file => resolve(file))
+                .catch(error => reject(error));
+            })
+          );
+          promiseSerial(promises)
+            .then((contents: object[]) => resolve(contents))
+            .catch((error: any) => reject(error));
+        })
+        .catch(error => reject(error));
+    });
+  }
+  readAllSync() {
+    const files = this.listSync();
+    const contents = [];
+    files.forEach(file => contents.push(this.readSync(file)));
+    return contents;
   }
   create(fileName: string, contents: any) {
     return new Promise((resolve, reject) => {

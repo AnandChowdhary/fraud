@@ -36,6 +36,8 @@ files
     })
   )
   .then(() => console.log("Updated user"))
+  .then(() => files.readAll())
+  .then(all => console.log("Read all files", all))
   .then(() => files.delete("user"))
   .then(() => console.log("Deleted file"))
   .catch(error => console.log("Error", error));

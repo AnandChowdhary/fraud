@@ -1,6 +1,6 @@
 {
   "name": "fraud",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,7 +11,7 @@
     "build": "tsc",
     "prettier": "onchange '**/*.ts' -- prettier --write {{changed}}",
     "start": "onchange '*.ts' -- yarn build",
-    "demo": "yarn build && nodemon --watch dist dist/demo.js",
+    "demo": "yarn build && nodemon --watch dist dist/sync-demo.js",
     "test": "jest --coverage --coverageReporters=text-lcov | coveralls",
     "test-without-sending": "jest --coverage"
   },
@@ -44,5 +44,8 @@
       "json",
       "node"
     ]
+  },
+  "dependencies": {
+    "promise-serial": "^0.1.5"
   }
 }

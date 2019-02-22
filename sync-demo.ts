@@ -6,7 +6,7 @@ interface Data {
   phone: any;
 }
 
-const directory: string = "./database-2";
+const directory: string = "./database";
 
 const files = new Fraud({
   directory
@@ -29,6 +29,9 @@ console.log("Name: " + files.readSync("user").name);
 
 // Listing all files
 console.log("List of files", files.listSync());
+
+// Listing all contents
+console.log("All contents of files", files.readAllSync());
 
 // Updating country code of Jane
 console.log(

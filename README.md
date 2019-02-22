@@ -61,6 +61,7 @@ You can use the following methods for programatical access:
 | `create(fileName, object, overwrite?)` | Creates a new file |
 | `delete(fileName)` | Deletes a file |
 | `read(fileName)` | Reads a file |
+| `readAll()` | Reads all files (3.0.0+) |
 | `update(fileName, object)` | Patches a file |
 | `list()` | Lists all available files |
 | `exists(fileName)` | Returns whether file exists |
