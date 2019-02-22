@@ -83,17 +83,21 @@ export default class Fraud implements Frauderface {
   }
   readAll() {
     return new Promise((resolve, reject) => {
+      const contents = {};
       this.list()
         .then((files: string[]) => {
           const promises = files.map((file: string) => () =>
             new Promise((resolve, reject) => {
               this.read(file)
-                .then(file => resolve(file))
+                .then(text => {
+                  contents[file] = text;
+                  resolve(text);
+                })
                 .catch(error => reject(error));
             })
           );
           promiseSerial(promises)
-            .then((contents: object[]) => resolve(contents))
+            .then(() => resolve(contents))
             .catch((error: any) => reject(error));
         })
         .catch(error => reject(error));
@@ -101,8 +105,10 @@ export default class Fraud implements Frauderface {
   }
   readAllSync() {
     const files = this.listSync();
-    const contents = [];
-    files.forEach(file => contents.push(this.readSync(file)));
+    const contents = {};
+    files.forEach(file => {
+      contents[file] = this.readSync(file);
+    });
     return contents;
   }
   create(fileName: string, contents: any) {
