@@ -38,6 +38,8 @@ Now, you can use Fraud functions to use your file system as a JSON database. Thi
 - No-config database for key-JSON storage
 - As fast as your file system (low latency)
 
+**Real use case:** Switching API configuration from MySQL (managed RDS in the same region as an EC2) to Fraud, [Oswald Labs Platform](https://oswaldlabs.com/platform/) was able to reduce event tracking latency from 100-150ms to 30-70ms.
+
 ## 💻 Configuration
 
 You can use the following options in the constructor:
