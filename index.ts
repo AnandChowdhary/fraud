@@ -174,7 +174,7 @@ export default class Fraud implements Frauderface {
   delete(fileName: string) {
     if (this.softDelete) {
       return new Promise((resolve, reject) => {
-        fs.rename(fileName, this.deletedPrefix + fileName, error => {
+        this.rename(fileName, this.deletedPrefix + fileName, error => {
           if (error) return reject(error);
           this.callUpdate(fileName);
           resolve();
