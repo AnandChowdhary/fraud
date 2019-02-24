@@ -7,12 +7,16 @@ interface Frauderface {
   root: string;
   extension: string;
   updateFunction?: Function;
+  softDelete: Boolean;
+  deletedPrefix: string;
 }
 
 interface Constructor {
   directory: string;
   extension?: string;
   update?: Function;
+  softDelete?: Boolean;
+  deletedPrefix?: string;
 }
 
 const updateValues = (f1: object, f2: object) => {
@@ -31,10 +35,20 @@ export default class Fraud implements Frauderface {
   root: string;
   extension: string;
   updateFunction?: Function;
-  constructor({ directory, extension, update }: Constructor) {
+  softDelete: Boolean;
+  deletedPrefix: string;
+  constructor({
+    directory,
+    extension,
+    update,
+    softDelete,
+    deletedPrefix
+  }: Constructor) {
     this.root = directory;
     this.extension = extension || "json";
     this.updateFunction = update;
+    this.softDelete = !!softDelete;
+    this.deletedPrefix = deletedPrefix || "__deleted_";
   }
   init() {
     return new Promise((resolve, reject) => {
@@ -53,10 +67,14 @@ export default class Fraud implements Frauderface {
   }
   exists(fileName: string) {
     return new Promise(resolve => {
+      if (this.softDelete && fileName.startsWith(this.deletedPrefix))
+        return resolve(false);
       fs.exists(this.getPath(fileName), (exists: boolean) => resolve(exists));
     });
   }
   existsSync(fileName: string) {
+    if (this.softDelete && fileName.startsWith(this.deletedPrefix))
+      return false;
     return fs.existsSync(this.getPath(fileName));
   }
   list() {
@@ -65,7 +83,12 @@ export default class Fraud implements Frauderface {
         if (error) return reject(error);
         resolve(
           files
-            .filter((fileName: string) => fileName.endsWith(this.extension))
+            .filter((fileName: string) =>
+              this.softDelete
+                ? fileName.endsWith(this.extension) &&
+                  !fileName.startsWith(this.deletedPrefix)
+                : fileName.endsWith(this.extension)
+            )
             .map((fileName: string) =>
               fileName.substring(0, fileName.length - 1 - this.extension.length)
             )
@@ -76,7 +99,12 @@ export default class Fraud implements Frauderface {
   listSync() {
     return fs
       .readdirSync(this.root)
-      .filter((fileName: string) => fileName.endsWith(this.extension))
+      .filter((fileName: string) =>
+        this.softDelete
+          ? fileName.endsWith(this.extension) &&
+            !fileName.startsWith(this.deletedPrefix)
+          : fileName.endsWith(this.extension)
+      )
       .map((fileName: string) =>
         fileName.substring(0, fileName.length - 1 - this.extension.length)
       );
@@ -144,16 +172,43 @@ export default class Fraud implements Frauderface {
     }
   }
   delete(fileName: string) {
+    if (this.softDelete) {
+      return new Promise((resolve, reject) => {
+        fs.rename(fileName, this.deletedPrefix + fileName, error => {
+          if (error) return reject(error);
+          this.callUpdate(fileName);
+          resolve();
+        });
+      });
+    } else {
+      return new Promise((resolve, reject) => {
+        fs.unlink(this.getPath(fileName), error => {
+          if (error) return reject(error);
+          this.callUpdate(fileName);
+          resolve();
+        });
+      });
+    }
+  }
+  deleteSync(fileName: string) {
+    if (this.softDelete) {
+      this.renameSync(fileName, this.deletedPrefix + fileName);
+    } else {
+      fs.unlinkSync(this.getPath(fileName));
+    }
+    this.callUpdate(fileName);
+  }
+  rename(fileName: string, newFileName: string) {
     return new Promise((resolve, reject) => {
-      fs.unlink(this.getPath(fileName), error => {
+      fs.rename(this.getPath(fileName), this.getPath(newFileName), error => {
         if (error) return reject(error);
         this.callUpdate(fileName);
         resolve();
       });
     });
   }
-  deleteSync(fileName: string) {
-    fs.unlinkSync(this.getPath(fileName));
+  renameSync(fileName: string, newFileName: string) {
+    fs.renameSync(this.getPath(fileName), this.getPath(newFileName));
     this.callUpdate(fileName);
   }
   update(fileName: string, updateObject: any) {

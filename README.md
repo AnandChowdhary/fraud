@@ -45,10 +45,12 @@ You can use the following options in the constructor:
 ```js
 const database = new Fraud({
   directory: "./database", // Where files are stored
-  extension: "json", // File extension for JSON files,
+  extension: "json", // File extension for JSON files
   update: info => { // Function to call when files are updated
       console.log(info);
-  }
+  },
+  softDelete: false, // Set to true to not delete files, just rename and hide them,
+  deletePrefix: "__deleted_" // If soft delete is enabled, use this prefix
 });
 ```
 
@@ -65,6 +67,7 @@ You can use the following methods for programatical access:
 | `update(fileName, object)` | Patches a file |
 | `list()` | Lists all available files |
 | `exists(fileName)` | Returns whether file exists |
+| `rename(fileName, newName)` | Renames a file |
 
 There are also `sync` versions of each function above (e.g., `createSync()`).
 
