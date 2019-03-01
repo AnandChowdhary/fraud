@@ -25,13 +25,16 @@ files.createSync("user", <Data>{
 console.log("Created new file (user.json)");
 
 // Reading a file
-console.log("Name: " + files.readSync("user").name);
+console.log("User: " + JSON.stringify(files.readSync("user", true)));
 
 // Listing all files
 console.log("List of files", files.listSync());
 
 // Listing all contents
 console.log("All contents of files", files.readAllSync());
+
+// Listing all files
+console.log("List of cached files", files.listCacheSync());
 
 // Updating country code of Jane
 console.log(

@@ -2,6 +2,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as mkdirp from "mkdirp";
 import * as promiseSerial from "promise-serial";
+import * as nodeCache from "node-cache";
+import { NodeCache } from "./node_modules/node-cache/index";
 
 interface Frauderface {
   root: string;
@@ -9,6 +11,7 @@ interface Frauderface {
   updateFunction?: Function;
   softDelete: Boolean;
   deletedPrefix: string;
+  cache: NodeCache;
 }
 
 interface Constructor {
@@ -17,6 +20,8 @@ interface Constructor {
   update?: Function;
   softDelete?: Boolean;
   deletedPrefix?: string;
+  stdTTL?: number;
+  checkperiod?: number;
 }
 
 const updateValues = (f1: object, f2: object) => {
@@ -37,18 +42,25 @@ export default class Fraud implements Frauderface {
   updateFunction?: Function;
   softDelete: Boolean;
   deletedPrefix: string;
+  cache: NodeCache;
   constructor({
     directory,
     extension,
     update,
     softDelete,
-    deletedPrefix
+    deletedPrefix,
+    stdTTL,
+    checkperiod
   }: Constructor) {
     this.root = directory;
     this.extension = extension || "json";
     this.updateFunction = update;
     this.softDelete = !!softDelete;
     this.deletedPrefix = deletedPrefix || "__deleted_";
+    this.cache = new nodeCache({
+      stdTTL,
+      checkperiod: checkperiod || 0
+    });
   }
   init() {
     return new Promise((resolve, reject) => {
@@ -65,6 +77,56 @@ export default class Fraud implements Frauderface {
   getPath(fileName: string) {
     return path.join(this.root, `${fileName}.${this.extension}`);
   }
+  updateCache(fileName: string, contents?: any) {
+    if (contents) {
+      return new Promise((resolve, reject) => {
+        this.cache.set(fileName, contents, error => {
+          if (error) return reject(error);
+          resolve();
+        });
+      });
+    } else {
+      return new Promise((resolve, reject) => {
+        this.read(fileName)
+          .then(value => {
+            this.cache.set(fileName, value, error => {
+              if (error) return reject(error);
+              resolve();
+            });
+          })
+          .catch(error => reject(error));
+      });
+    }
+  }
+  updateCacheSync(fileName: string, contents?: any) {
+    if (contents) {
+      this.cache.set(fileName, contents);
+    } else {
+      this.cache.set(fileName, this.readSync(fileName));
+    }
+  }
+  getCached(fileName: string) {
+    return new Promise((resolve, reject) => {
+      this.cache.get(fileName, (error, value) => {
+        if (error || !value) return reject(error);
+        resolve(value);
+      });
+    });
+  }
+  getCachedSync(fileName: string) {
+    return this.cache.get(fileName);
+  }
+  deleteCache(fileName: string) {
+    return new Promise((resolve, reject) => {
+      this.cache.del(fileName, error => {
+        if (error) return reject(error);
+        resolve();
+      });
+    });
+  }
+  deleteCacheSync(fileName: string) {
+    return this.cache.del(fileName);
+  }
   exists(fileName: string) {
     return new Promise(resolve => {
       if (this.softDelete && fileName.startsWith(this.deletedPrefix))
@@ -76,6 +138,17 @@ export default class Fraud implements Frauderface {
     if (this.softDelete && fileName.startsWith(this.deletedPrefix))
       return false;
     return fs.existsSync(this.getPath(fileName));
+  }
+  listCache() {
+    return new Promise((resolve, reject) => {
+      this.cache.keys((error, list) => {
+        if (error) return reject(error);
+        resolve(list);
+      });
+    })
+  }
+  listCacheSync() {
+    return this.cache.keys();
   }
   list() {
     return new Promise((resolve, reject) => {
@@ -143,29 +216,54 @@ export default class Fraud implements Frauderface {
     return new Promise((resolve, reject) => {
       fs.writeFile(this.getPath(fileName), JSON.stringify(contents), error => {
         if (error) return reject(error);
-        this.callUpdate(fileName);
-        resolve();
+        this.updateCache(fileName, contents)
+          .then(() => this.callUpdate(fileName))
+          .then(() => resolve())
+          .catch(error => reject(error));
       });
     });
   }
   createSync(fileName: string, contents: any) {
     fs.writeFileSync(this.getPath(fileName), JSON.stringify(contents));
+    this.updateCacheSync(fileName, contents);
     this.callUpdate(fileName);
   }
-  read(fileName: string) {
+  read(fileName: string, detailed?: Boolean) {
     return new Promise((resolve, reject) => {
-      fs.readFile(this.getPath(fileName), (error, file) => {
-        if (error) return reject(error);
-        try {
-          resolve(JSON.parse(file.toString()));
-        } catch (error) {
-          reject(error);
-        }
-      });
+      this.getCached(fileName)
+        .then(file =>
+          resolve(detailed ? { ...file, details: { from: "cache" } } : file)
+        )
+        .catch(() => {
+          fs.readFile(this.getPath(fileName), (error, file) => {
+            if (error) return reject(error);
+            try {
+              if (detailed) {
+                resolve({
+                  ...JSON.parse(file.toString()),
+                  details: { from: "storage" }
+                });
+              } else {
+                resolve(JSON.parse(file.toString()));
+              }
+            } catch (error) {
+              reject(error);
+            }
+          });
+        });
     });
   }
-  readSync(fileName: string) {
+  readSync(fileName: string, detailed?: Boolean) {
+    const contents = this.getCachedSync(fileName);
+    if (contents && detailed)
+      return { ...contents, details: { from: "cache" } };
+    if (contents) return contents;
     try {
+      if (detailed)
+        return {
+          ...JSON.parse(fs.readFileSync(this.getPath(fileName)).toString()),
+          details: { from: "storage" }
+        };
       return JSON.parse(fs.readFileSync(this.getPath(fileName)).toString());
     } catch (e) {
       return false;
@@ -185,6 +283,7 @@ export default class Fraud implements Frauderface {
       return new Promise((resolve, reject) => {
         fs.unlink(this.getPath(fileName), error => {
           if (error) return reject(error);
+          this.deleteCache(fileName);
           this.callUpdate(fileName);
           resolve();
         });
@@ -196,6 +295,7 @@ export default class Fraud implements Frauderface {
       this.renameSync(fileName, this.deletedPrefix + fileName);
     } else {
       fs.unlinkSync(this.getPath(fileName));
+      this.deleteCacheSync(fileName);
     }
     this.callUpdate(fileName);
   }
@@ -203,13 +303,18 @@ export default class Fraud implements Frauderface {
     return new Promise((resolve, reject) => {
       fs.rename(this.getPath(fileName), this.getPath(newFileName), error => {
         if (error) return reject(error);
-        this.callUpdate(fileName);
-        resolve();
+        this.read(fileName)
+          .then(contents => this.updateCache(newFileName, contents))
+          .then(() => this.callUpdate())
+          .then(() => resolve())
+          .catch(error => reject(error));
       });
     });
   }
   renameSync(fileName: string, newFileName: string) {
     fs.renameSync(this.getPath(fileName), this.getPath(newFileName));
+    this.updateCacheSync(newFileName, this.readSync(fileName));
+    this.deleteCacheSync(fileName);
     this.callUpdate(fileName);
   }
   update(fileName: string, updateObject: any) {

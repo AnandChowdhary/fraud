@@ -7,7 +7,7 @@
 [![GitHub](https://img.shields.io/github/license/anandchowdhary/fraud.svg)](https://github.com/AnandChowdhary/fraud/blob/master/LICENSE)
 ![Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/AnandChowdhary/fraud.svg)
 
-Fraud is a promise-based library for Node.js for a file-system based data storage solution for times when MongoDB is an overkill. It's essentially a wrapper around the native `fs` filesystem functions, with added utilities.
+Fraud is a promise-based library for Node.js for a data storage solution for times when MongoDB is an overkill. It's essentially a wrapper around the native `fs` filesystem and [nodecache](https://github.com/mpneuried/nodecache), with added utilities.
 
 ## ⭐ How it works
 
@@ -36,9 +36,17 @@ Now, you can use Fraud functions to use your file system as a JSON database. Thi
 ## 💡 Why Fraud
 
 - No-config database for key-JSON storage
-- As fast as your file system (low latency)
+- Caches everything in memory, uses file system if uncached
+- Super fast and super low-latency
 
 **Real use case:** Switching API configuration from MySQL (managed RDS in the same region as an EC2) to Fraud, [Oswald Labs Platform](https://oswaldlabs.com/platform/) was able to reduce event tracking latency from 100-150ms to 30-70ms.
+
+### How it works
+
+1. When you use `read(key)`, it queries in-memory cache
+2. If found, returns it from the cache (super fast)
+3. Otherwise, return it from the file system
+4. Save it in cache, so future requests are from the cache
 
 ## 💻 Configuration
 
@@ -52,7 +60,9 @@ const database = new Fraud({
       console.log(info);
   },
   softDelete: false, // Set to true to not delete files, just rename and hide them,
-  deletePrefix: "__deleted_" // If soft delete is enabled, use this prefix
+  deletePrefix: "__deleted_", // If soft delete is enabled, use this prefix,
+  stdTTL: 0, // Standard TTL number of seconds (0 is unlimited)
+  checkperiod: 0 // Period in seconds to automatically perform delete check (0 is no check)
 });
 ```
 
@@ -68,10 +78,12 @@ You can use the following methods for programatical access:
 | `readAll()` | Reads all files (3.0.0+) |
 | `update(fileName, object)` | Patches a file |
 | `list()` | Lists all available files |
-| `exists(fileName)` | Returns whether file exists |
-| `rename(fileName, newName)` | Renames a file |
+| `exists(fileName)` (note) | Returns whether file exists |
+| `listCache()` | Lists all available cached files (5.0.0+) |
 
 There are also `sync` versions of each function above (e.g., `createSync()`).
+
+**Note:** It is better to use `read()` and catch a promise rejection than using `exists()`, because exists skips the cache and only checks the file system to make sure it's available. You should also be careful when using `readAll()` and `list()` for the same reason.
 
 For example, you can create a new file like this:
 
@@ -103,6 +115,14 @@ database.read("ara").then(user => console.log(user.phone));
 // { countryCode: 1, number: "XXXXXXXXX" }
 ```
 
+Or using async/await:
+
+```js
+const user = await database.read("ara");
+console.log(user.phone);
+// { countryCode: 1, number: "XXXXXXXXX" }
+```
+
 ## 🛠️ Development
 
 Start development server with Nodemon:
@@ -123,7 +143,7 @@ yarn build
 
 - [x] Make it work
 - [ ] Basic queries
-- [ ] Save recent files in memory too (Redis?)
+- [x] Save recent files in memory too (~~Redis?~~ nodecache)
 
 ## 📝 License
 

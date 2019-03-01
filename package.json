@@ -1,6 +1,6 @@
 {
   "name": "fraud",
-  "version": "4.1.0",
+  "version": "5.0.0",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -46,6 +46,7 @@
     ]
   },
   "dependencies": {
+    "node-cache": "^4.2.0",
     "promise-serial": "^0.1.5"
   }
 }
