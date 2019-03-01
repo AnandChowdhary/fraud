@@ -7,3 +7,5 @@ include:
   - README.md
   - LICENSE.md
   
+
+theme: jekyll-theme-minimal
