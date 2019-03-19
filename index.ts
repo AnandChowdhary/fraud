@@ -3,7 +3,7 @@ import * as path from "path";
 import * as mkdirp from "mkdirp";
 import * as promiseSerial from "promise-serial";
 import * as nodeCache from "node-cache";
-import { NodeCache } from "./node_modules/node-cache/index";
+import { NodeCache } from "node-cache/index";
 
 interface Frauderface {
   root: string;
