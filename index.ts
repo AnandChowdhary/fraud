@@ -9,7 +9,8 @@ interface Frauderface {
   root: string;
   extension: string;
   updateFunction?: Function;
-  softDelete: Boolean;
+  softDelete: boolean;
+  allowDirectories: boolean;
   deletedPrefix: string;
   cache: NodeCache;
 }
@@ -18,10 +19,11 @@ interface Constructor {
   directory: string;
   extension?: string;
   update?: Function;
-  softDelete?: Boolean;
+  softDelete?: boolean;
   deletedPrefix?: string;
   stdTTL?: number;
   checkperiod?: number;
+  allowDirectories?: boolean;
 }
 
 const updateValues = (f1: object, f2: object) => {
@@ -40,7 +42,8 @@ export default class Fraud implements Frauderface {
   root: string;
   extension: string;
   updateFunction?: Function;
-  softDelete: Boolean;
+  softDelete: boolean;
+  allowDirectories: boolean;
   deletedPrefix: string;
   cache: NodeCache;
   constructor({
@@ -50,11 +53,13 @@ export default class Fraud implements Frauderface {
     softDelete,
     deletedPrefix,
     stdTTL,
-    checkperiod
+    checkperiod,
+    allowDirectories
   }: Constructor) {
     this.root = directory;
     this.extension = extension || "json";
     this.updateFunction = update;
+    this.allowDirectories = !!allowDirectories;
     this.softDelete = !!softDelete;
     this.deletedPrefix = deletedPrefix || "__deleted_";
     this.cache = new nodeCache({
@@ -75,6 +80,8 @@ export default class Fraud implements Frauderface {
       return this.updateFunction(fileName);
   }
   getPath(fileName: string) {
+    if (!this.allowDirectories)
+      fileName = fileName.replace(/\\/g, "").replace(/\\/g, "");
     return path.join(this.root, `${fileName}.${this.extension}`);
   }
   updateCache(fileName: string, contents?: any) {
@@ -145,7 +152,7 @@ export default class Fraud implements Frauderface {
         if (error) return reject(error);
         resolve(list);
       });
-    })
+    });
   }
   listCacheSync() {
     return this.cache.keys();
@@ -228,7 +235,7 @@ export default class Fraud implements Frauderface {
     this.updateCacheSync(fileName, contents);
     this.callUpdate(fileName);
   }
-  read(fileName: string, detailed?: Boolean) {
+  read(fileName: string, detailed?: boolean) {
     return new Promise((resolve, reject) => {
       this.getCached(fileName)
         .then(file =>
@@ -253,7 +260,7 @@ export default class Fraud implements Frauderface {
         });
     });
   }
-  readSync(fileName: string, detailed?: Boolean) {
+  readSync(fileName: string, detailed?: boolean) {
     const contents = this.getCachedSync(fileName);
     if (contents && detailed)
       return { ...contents, details: { from: "cache" } };
