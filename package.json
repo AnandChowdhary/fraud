@@ -46,7 +46,7 @@
     ]
   },
   "dependencies": {
-    "node-cache": "^4.2.1",
+    "node-cache": "^5.1.0",
     "promise-serial": "^0.1.5"
   }
 }
