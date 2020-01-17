@@ -26,6 +26,10 @@ interface Constructor {
   allowDirectories?: boolean;
 }
 
+interface FileObject {
+  [index: string]: any;
+}
+
 const updateValues = (f1: object, f2: object) => {
   Object.keys(f2).forEach(key => {
     if (f2.hasOwnProperty(key)) {
@@ -84,7 +88,7 @@ export default class Fraud implements Frauderface {
       fileName = fileName.replace(/\\/g, "").replace(/\\/g, "");
     return path.join(this.root, `${fileName}.${this.extension}`);
   }
-  updateCache(fileName: string, contents?: Object): Promise<void> {
+  updateCache(fileName: string, contents?: FileObject): Promise<void> {
     if (contents) {
       return new Promise((resolve, reject) => {
         this.cache.set(fileName, contents, error => {
@@ -105,22 +109,22 @@ export default class Fraud implements Frauderface {
       });
     }
   }
-  updateCacheSync(fileName: string, contents?: Object) {
+  updateCacheSync(fileName: string, contents?: FileObject) {
     if (contents) {
       this.cache.set(fileName, contents);
     } else {
       this.cache.set(fileName, this.readSync(fileName));
     }
   }
-  getCached(fileName: string): Promise<Object> {
+  getCached(fileName: string): Promise<FileObject> {
     return new Promise((resolve, reject) => {
-      this.cache.get(fileName, (error, value) => {
+      this.cache.get(fileName, (error, value: FileObject) => {
         if (error || !value) return reject(error);
         resolve(value);
       });
     });
   }
-  getCachedSync(fileName: string): Object {
+  getCachedSync(fileName: string): FileObject {
     return this.cache.get(fileName);
   }
   deleteCache(fileName: string): Promise<void> {
@@ -189,7 +193,7 @@ export default class Fraud implements Frauderface {
         fileName.substring(0, fileName.length - 1 - this.extension.length)
       );
   }
-  readAll(): Promise<Object> {
+  readAll(): Promise<FileObject> {
     return new Promise((resolve, reject) => {
       const contents = {};
       this.list()
@@ -213,7 +217,7 @@ export default class Fraud implements Frauderface {
   }
   readAllSync() {
     const files = this.listSync();
-    const contents: Object = {};
+    const contents: FileObject = {};
     files.forEach(file => {
       contents[file] = this.readSync(file);
     });
@@ -235,7 +239,7 @@ export default class Fraud implements Frauderface {
     this.updateCacheSync(fileName, contents);
     this.callUpdate(fileName);
   }
-  read(fileName: string, detailed?: boolean): Promise<Object> {
+  read(fileName: string, detailed?: boolean): Promise<FileObject> {
     return new Promise((resolve, reject) => {
       this.getCached(fileName)
         .then(file =>
@@ -260,7 +264,7 @@ export default class Fraud implements Frauderface {
         });
     });
   }
-  readSync(fileName: string, detailed?: boolean): Object {
+  readSync(fileName: string, detailed?: boolean): FileObject {
     const contents = this.getCachedSync(fileName);
     if (contents && detailed)
       return { ...contents, details: { from: "cache" } };
@@ -273,7 +277,7 @@ export default class Fraud implements Frauderface {
         };
       return JSON.parse(fs.readFileSync(this.getPath(fileName)).toString());
     } catch (e) {
-      return false;
+      return;
     }
   }
   delete(fileName: string): Promise<void> {
@@ -324,7 +328,7 @@ export default class Fraud implements Frauderface {
     this.deleteCacheSync(fileName);
     this.callUpdate(fileName);
   }
-  update(fileName: string, updateObject: any): Promise<Object> {
+  update(fileName: string, updateObject: any): Promise<FileObject> {
     return new Promise((resolve, reject) => {
       this.read(fileName)
         .then(file => {
