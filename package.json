@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@types/jest": "^25.2.0",
-    "@types/node": "^13.13.1",
+    "@types/node": "^13.13.2",
     "coveralls": "^3.0.13",
     "jest": "^25.1.0",
     "mkdirp": "^1.0.4",
