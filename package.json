@@ -19,7 +19,7 @@
     "@types/jest": "^25.2.0",
     "@types/node": "^13.13.4",
     "coveralls": "^3.1.0",
-    "jest": "^25.1.0",
+    "jest": "^25.5.2",
     "mkdirp": "^1.0.4",
     "nodemon": "^2.0.3",
     "onchange": "^7.0.1",
