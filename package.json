@@ -23,7 +23,7 @@
     "mkdirp": "^1.0.4",
     "nodemon": "^2.0.4",
     "onchange": "^7.0.2",
-    "prettier": "^2.0.5",
+    "prettier": "^2.1.0",
     "ts-jest": "^25.5.1",
     "tsc": "^1.20150623.0",
     "typescript": "^3.9.7"
